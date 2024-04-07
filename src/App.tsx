@@ -4,6 +4,10 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'r
 import './App.css';
 import AjoHallintaPage from './AjoHallintaPage';
 import LuoAjoPage from './LuoAjoPage';
+import Kartta from './Kartta';
+import Rekisterointi from './rekisterointi';
+import AjoPage from './AjoPage';
+
 
 interface SignUpFormState {
   firstname: string;
@@ -38,8 +42,13 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
     }
 
     onLogin();
-    // Käytä navigate-funktiota ohjaamaan käyttäjä "ajonhallinta"-sivulle
+    //navigate-funktio ohjaa käyttäjän "ajonhallinta"-sivulle
     navigate("/ajonhallinta");
+  };
+
+  const handleRegister = () => {
+    // navigate-funktio ohjaa käyttäjän rekisteröintisivulle
+    navigate("/rekisterointi");
   };
 
   return (
@@ -67,6 +76,12 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
       {/* Muut kentät samalla tavalla */}
       <br />
       <button type="submit">Kirjaudu</button>
+      <p>
+        Eikö sinulla ole käyttäjää?{" "}
+        <span style={{ color: "blue", cursor: "pointer" }} onClick={handleRegister}>
+          Rekisteröidy tästä
+        </span>
+      </p>
     </form>
   );
 };
@@ -81,6 +96,11 @@ const App: React.FC = () => {
           <Route path="/" element={<LoginForm onLogin={() => setLoggedIn(true)} />} />
           <Route path="/ajonhallinta" element={<AjoHallintaPage loggedIn={loggedIn} />} />
           <Route path="/luouusi" element={<LuoAjoPage />} />
+          <Route path="/kartta" element={<Kartta />} />
+          <Route path="/rekisterointi" element={<Rekisterointi />} />
+          <Route path="/ajopage" element={<AjoPage />} />
+          
+  
         </Routes>
       </div>
     </Router>

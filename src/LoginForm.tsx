@@ -21,7 +21,6 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Lisää tarkistus minimipituudelle
     if ((name === 'firstname' || name === 'lastname') && value.length < 5) {
       // Jos etu- tai sukunimi on liian lyhyt, älä päivitä tilaa
       return;
