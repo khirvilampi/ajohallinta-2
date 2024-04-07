@@ -1,9 +1,7 @@
-// App.tsx
+// LoginForm.tsx
+
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
-import './App.css';
-import AjoHallintaPage from './AjoHallintaPage';
-import LuoAjoPage from './LuoAjoPage';
+import { useNavigate } from 'react-router-dom';
 
 interface SignUpFormState {
   firstname: string;
@@ -22,7 +20,13 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    console.log(`Field name: ${name}, Field value: ${value}`);
+
+    // Lisää tarkistus minimipituudelle
+    if ((name === 'firstname' || name === 'lastname') && value.length < 5) {
+      // Jos etu- tai sukunimi on liian lyhyt, älä päivitä tilaa
+      return;
+    }
+
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
@@ -30,15 +34,7 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Lisää tarkistus etu- ja sukunimen pituudelle tässä
-    if (formData.firstname.length < 5 || formData.lastname.length < 5) {
-      alert('Etu- ja sukunimen pitää olla vähintään 5 merkkiä pitkiä.');
-      return;
-    }
-
     onLogin();
-    // Käytä navigate-funktiota ohjaamaan käyttäjä "ajonhallinta"-sivulle
     navigate("/ajonhallinta");
   };
 
@@ -64,27 +60,10 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
         />
       </label>
       <br />
-      {/* Muut kentät samalla tavalla */}
       <br />
       <button type="submit">Kirjaudu</button>
     </form>
   );
 };
 
-const App: React.FC = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<LoginForm onLogin={() => setLoggedIn(true)} />} />
-          <Route path="/ajonhallinta" element={<AjoHallintaPage loggedIn={loggedIn} />} />
-          <Route path="/luouusi" element={<LuoAjoPage />} />
-        </Routes>
-      </div>
-    </Router>
-  );
-};
-
-export default App;
+export default LoginForm;
