@@ -1,7 +1,7 @@
-// LoginForm.tsx
-
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './LoginForm.css';
 
 interface SignUpFormState {
   firstname: string;
@@ -10,7 +10,11 @@ interface SignUpFormState {
   password: string;
 }
 
-const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
+interface LoginFormProps {
+  onLogin: (role: string) => void; // Muutettu, välitetään vain rooli
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [formData, setFormData] = useState<SignUpFormState>({
     firstname: '',
     lastname: '',
@@ -18,24 +22,62 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
     password: '',
   });
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    if ((name === 'firstname' || name === 'lastname') && value.length < 5) {
-      // Jos etu- tai sukunimi on liian lyhyt, älä päivitä tilaa
-      return;
-    }
-
+    console.log(`Field name: ${name}, Field value: ${value}`);
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
-    navigate("/ajonhallinta");
+    
+    if (!formData.firstname || !formData.lastname || !formData.password) {
+      alert("Täytä kaikki pakolliset kentät");
+      return;
+    }
+
+    
+    
+    try {
+      const response = await axios.post('http://localhost:8080/login', {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        password: formData.password,
+      });
+
+      console.log("response.data.success:", response);
+  
+      if (response.data.success) {
+        const user = response.data.user;
+        if (user.role === 'driver') {
+          onLogin(user);
+          navigate('/ajonhallinta');
+          alert("Olet Kirjautunut Ajajana.");
+        } else if (user.role === 'dispatcher') {
+          onLogin(user);
+          navigate('/ajonhallinta');
+          alert("Olet Kirjautunut Ajojärjestelijänä.");
+        }
+      } else {
+        alert("Väärin meni. yritä uudestaan");
+      }
+    } catch (error) {
+      console.error('virhe kirjautumisessa', error);
+      alert("epäonnistui. yritä uudestaan");
+    }
   };
+  
+
+  
+  
+  const handleRegister = () => {
+    navigate("/rekisterointi");
+  };
+
+  
 
   return (
     <form onSubmit={handleLogin}>
@@ -59,8 +101,23 @@ const LoginForm: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
         />
       </label>
       <br />
+      <label>
+        Salasana:
+        <input
+          type="text"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+        />
+      </label>
       <br />
       <button type="submit">Kirjaudu</button>
+      <p>
+        Eikö sinulla ole käyttäjää?{" "}
+        <span style={{ color: "blue", cursor: "pointer" }} onClick={handleRegister}>
+          Rekisteröidy tästä
+        </span>
+      </p>
     </form>
   );
 };

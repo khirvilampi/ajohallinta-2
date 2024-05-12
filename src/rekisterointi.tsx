@@ -49,7 +49,7 @@ const Rekisterointi: React.FC = () => {
       console.log('Ajo lisätty onnistuneesti.');
     } catch (error) {
       console.error('Virhe rekisteröinnissä:', error);
-      // Käsittely virhetilanteessa
+
     }
   };
 

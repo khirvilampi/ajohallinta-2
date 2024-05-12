@@ -1,0 +1,47 @@
+/* LoginForm.css */
+
+.form-container {
+  background-color: #000;
+  color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.form-container label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-container input[type="text"],
+.form-container input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.form-container button[type="submit"] {
+  background-color: #fff;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.form-container button[type="submit"]:hover {
+  background-color: #555;
+  color: #fff;
+}
+
+.form-container p {
+  margin-top: 10px;
+}
+
+.form-container p span {
+  color: #00f;
+  cursor: pointer;
+}

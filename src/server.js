@@ -1,33 +1,33 @@
 const express = require('express');
 const mysql2 = require('mysql2');
 const cors = require('cors');
-
+const axios = require('axios');
 const app = express();
 app.use(express.json());
 app.use(cors()); 
-
 const connection = mysql2.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'ubhx72ge',
-  database: 'ajojarjestelma',
+  host: 'localhost', // lisää tähän oma hostisi
+  user: 'käyttäjä', // lisää tähän oma käyttäjäsi
+  password: 'salasana', // lisää tähän tietokantasi salasana
+  database: 'tietokanta', // lisää tähän tietokantasi nimi 
 });
-
 connection.connect((err) => {
   if (err) {
     console.error('Virhe tietokantayhteyden muodostamisessa:', err);
+    console.log(process.env.REACT_APP_HOST);
     return;
   }
   console.log('Yhdistetty MySQL-tietokantaan.');
+  console.log(process.env.REACT_APP_HOST);
 });
 
 app.post('/api/luoajo', (req, res) => {
-  const { asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng } = req.body;
+  const { asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng, ajaja } = req.body;
 
-  const sql = `INSERT INTO ajo (asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO ajo (asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng, ajaja) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  connection.query(sql, [asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng], (err, results) => {
+  connection.query(sql, [asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng, ajaja], (err, results) => {
     if (err) {
       console.error('Virhe tallennettaessa tietoja:', err);
       res.status(500).json({ error: 'Virhe tallennettaessa tietoja' });
@@ -38,8 +38,30 @@ app.post('/api/luoajo', (req, res) => {
   });
 });
 
+app.get('/api/ajajat', (req,res) => {
+  connection.query('SELECT id, firstname, lastname FROM ajojarjestelma.users WHERE rooli = "driver"', (err, results) => {
+    if (err) {
+      console.error('virhe haettaessa ajajia:', err);
+      res.status(500).json({ error: 'virhe haettaessa ajajia'});
+      return; 
+    }
+    console.log('Ajotiedot haettu onnistuneesti.');
+    res.json(results);
+  });
+  
+});
+
 app.get('/api/ajot', (req, res) => {
-  connection.query('SELECT * FROM ajojarjestelma.ajo', (error, results, fields) => {
+  let query = `
+    SELECT ajo.*, users.firstname, users.lastname 
+    FROM ajojarjestelma.ajo AS ajo
+    JOIN users ON ajo.ajaja = users.id
+  `;
+  if (req.query.ajaja) {
+    // Jos pyyntössä on määritelty ajaja, haetaan vain kyseisen ajajan ajot
+    query += `WHERE ajo.ajaja = ?`;
+  }
+  connection.query(query, [req.query.ajaja], (error, results, fields) => {
     if (error) {
       console.error('Virhe haettaessa ajotietoja:', error);
       res.status(500).json({ error: 'Virhe haettaessa ajotietoja' });
@@ -49,6 +71,7 @@ app.get('/api/ajot', (req, res) => {
     res.json(results);
   });
 });
+
 
 app.delete('/api/ajot/:id', (req, res) => {
   const id = req.params.id;
@@ -65,20 +88,79 @@ app.delete('/api/ajot/:id', (req, res) => {
   });
 });
 
+app.put('/api/ajot/:id', (req, res) => {
+  const id = req.params.id;
+  const { asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng } = req.body;
+
+  const sql = 'UPDATE ajojarjestelma.ajo SET asiakas = ?, ajankohta = ?, osoite = ?, paikkakunta = ?, yhteystiedot = ?, lisatietoja = ?, lat = ?, lng = ? WHERE id = ?';
+  connection.query(sql, [asiakas, ajankohta, osoite, paikkakunta, yhteystiedot, lisatietoja, lat, lng, id], (err, result) => {
+    if (err) {
+      console.error('Virhe tietokannassa:', err);
+      res.status(500).json({ success: false, message: 'Tietojen päivitys epäonnistui' });
+      return;
+    }
+    res.status(200).json({ success: true, message: 'Tietojen päivitys onnistui' });
+  });
+});
+
+
+
+
 app.post('/rekisterointi', (req, res) => {
   const { firstname, lastname, email, password } = req.body;
-  
   const sql = 'INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)';
   connection.query(sql, [firstname, lastname, email, password], (error, results) => {
     if (error) {
       console.error('Virhe tallennettaessa tietoja:', error);
       res.status(500).json({ error: 'Virhe tallennettaessa tietoja' });
-      return;
+    } else {
+      // Tietojen tallennus onnistui
+      res.status(200).json({ success: true, message: 'Tiedot tallennettu onnistuneesti' });
     }
-    console.log('Tiedot tallennettu onnistuneesti.');
-    res.status(201).json({ message: 'Rekisteröinti onnistui' });
   });
 });
+
+app.post('/login', (req, res) => {
+  const { firstname, lastname, password, } = req.body;
+
+  const sql = 'SELECT * FROM users WHERE firstname = ? AND lastname = ? AND BINARY password = ?';
+  connection.query(sql, [firstname, lastname, password], (err, result) => {
+    if (err) {
+      console.error('Virhe tietokannasta:', err);
+      res.status(500).json({ success: false, message: 'Virhe tietokannasta' });
+      return;
+    }
+    if (result.length > 0) {
+      console.log('tulos',result);
+      if (result[0].password === password) {
+        // Hae käyttäjän rooli
+        const user = result[0];
+        console.log("Käyttäjä",user);
+        const role = user.rooli;
+        const userId = user.id;
+
+        // Lisää rooli vastaukseen
+        const response = {
+          success: true,
+          message: 'Tervetuloa!',
+          user: {
+            id: userId, 
+            firstname: user.firstname,
+            lastname: user.lastname,
+            role: role
+          }
+        };
+        res.status(200).json(response);
+      } else {
+        res.status(401).json({ success: false, message: 'Väärä salasana' });
+      }
+    } else {
+      // Käyttäjää ei löytynyt
+      res.status(401).json({ success: false, message: 'Väärä etunimi, sukunimi tai salasana' });
+    }
+  });
+});
+
 
 
 

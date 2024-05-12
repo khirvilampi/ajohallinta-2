@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const LuoAjoPage: React.FC = () => {
@@ -8,9 +8,26 @@ const LuoAjoPage: React.FC = () => {
   const [paikkakunta, setPaikkakunta] = useState('');
   const [yhteystiedot, setYhteystiedot] = useState('');
   const [lisatietoja, setLisatietoja] = useState('');
+  const [ajaja, setAjaja] = useState('');
+  const [ajajat, setAjajat] = useState([]);
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    
+    async function fetchAjajat() {
+      try {
+        const response = await axios.get('http://localhost:8080/api/ajajat');
+        setAjajat(response.data);
+      } catch (error) {
+        console.error('Virhe haettaessa ajajia:', error);
+        setError('Virhe haettaessa ajajia');
+      }
+    }
+
+    fetchAjajat();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +51,7 @@ const LuoAjoPage: React.FC = () => {
           lisatietoja,
           lat: paikkatiedot.lat,
           lng: paikkatiedot.lon,
+          ajaja,
         }),
       });
 
@@ -42,6 +60,7 @@ const LuoAjoPage: React.FC = () => {
       }
 
       console.log('Ajo lisätty onnistuneesti.');
+      alert(`Olet Lisännyt Ajon kuskille ${ajaja}.`);
     } catch (error) {
       setError((error as Error).message);
     }
@@ -51,7 +70,6 @@ const LuoAjoPage: React.FC = () => {
     try {
       const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${osoite}, ${paikkakunta}`);
       if (response.data.length > 0) {
-        // Palauta ensimmäinen osoitteen sijainti
         return {
           lat: response.data[0].lat,
           lon: response.data[0].lon,
@@ -106,15 +124,18 @@ const LuoAjoPage: React.FC = () => {
         </label>
         <br />
 
+    
         <label>
-          Latitudi:
-          <input type="text" value={lat} onChange={(e) => setLat(e.target.value)} />
-        </label>
-        <br />
+          Valitse ajaja:
+          <select value={ajaja} onChange={(e) => setAjaja(e.target.value)}>
+  <option value="">Valitse...</option>
+  {ajajat.map((ajaja: any) => (
+    <option key={ajaja.id} value={ajaja.id}>
+      {ajaja.firstname} {ajaja.lastname}
+    </option>
+  ))}
+</select>
 
-        <label>
-          Longitudi:
-          <input type="text" value={lng} onChange={(e) => setLng(e.target.value)} />
         </label>
         <br />
 
