@@ -42,7 +42,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     
     
     try {
-      const response = await axios.post('https://aesthetic-granita-fba93b.netlify.app/login', {
+      const response = await axios.post('https://ajohallinta-2.onrender.com//login', {
         firstname: formData.firstname,
         lastname: formData.lastname,
         password: formData.password,

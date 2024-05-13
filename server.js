@@ -3,22 +3,22 @@ const mysql2 = require('mysql2');
 const cors = require('cors');
 const axios = require('axios');
 const app = express();
+const Pool = require('pg').Pool
 app.use(express.json());
 app.use(cors()); 
-const connection = mysql2.createConnection({
-  host: 'localhost', // lisää tähän oma hostisi
-  user: 'käyttäjä', // lisää tähän oma käyttäjäsi
-  password: 'salasana', // lisää tähän tietokantasi salasana
-  database: 'tietokanta', // lisää tähän tietokantasi nimi 
+const connection = new Pool({
+  user: "root",
+  host: "dpg-cp17m3mv3ddc73cudr7g-a'",
+  database: "konstankanta",
+  password: "HAGt949osBTDK1MVSt9lqBMaUhZJjTV3",
+  port: 5432,
 });
 connection.connect((err) => {
   if (err) {
     console.error('Virhe tietokantayhteyden muodostamisessa:', err);
-    console.log(process.env.REACT_APP_HOST);
     return;
   }
   console.log('Yhdistetty MySQL-tietokantaan.');
-  console.log(process.env.REACT_APP_HOST);
 });
 
 app.post('/api/luoajo', (req, res) => {
