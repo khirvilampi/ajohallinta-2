@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(cors()); 
 const connection = new Pool({
   user: "root",
-  host: "dpg-cp17m3mv3ddc73cudr7g-a'",
+  host: "localhost",
   database: "konstankanta",
   password: "HAGt949osBTDK1MVSt9lqBMaUhZJjTV3",
   port: 5432,
